@@ -11,10 +11,10 @@ from app.domains.recommendation.domain.value_object.time_slot import TimeSlot
 from app.domains.recommendation.domain.value_object.transport import Transport
 
 _TIMESLOT_ACTIVITY_SCORES: Dict[TimeSlot, Dict[ActivityType, int]] = {
-    TimeSlot.LUNCH:     {ActivityType.CORE_ACTIVITY: 5, ActivityType.SUB_ACTIVITY: 2},
-    TimeSlot.AFTERNOON: {ActivityType.CORE_ACTIVITY: 5, ActivityType.SUB_ACTIVITY: 3},
-    TimeSlot.EVENING:   {ActivityType.CORE_ACTIVITY: 4, ActivityType.SUB_ACTIVITY: 5},
-    TimeSlot.NIGHT:     {ActivityType.CORE_ACTIVITY: 2, ActivityType.SUB_ACTIVITY: 5},
+    TimeSlot.LUNCH:     {ActivityType.CORE_ACTIVITY: 8, ActivityType.SUB_ACTIVITY: 1},
+    TimeSlot.AFTERNOON: {ActivityType.CORE_ACTIVITY: 7, ActivityType.SUB_ACTIVITY: 3},
+    TimeSlot.EVENING:   {ActivityType.CORE_ACTIVITY: 2, ActivityType.SUB_ACTIVITY: 8},
+    TimeSlot.NIGHT:     {ActivityType.CORE_ACTIVITY: 0, ActivityType.SUB_ACTIVITY: 10},
 }
 
 _TRANSPORT_SCORES: Dict[Transport, int] = {

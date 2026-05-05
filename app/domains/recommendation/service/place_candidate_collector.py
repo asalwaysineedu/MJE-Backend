@@ -14,6 +14,7 @@ from app.domains.recommendation.service.place_search_query_builder import (
 from app.domains.recommendation.service.search_client_interface import SearchClientInterface
 
 _MIN_REQUIRED = 5
+_MIN_ACTIVITY_PER_TYPE = 3
 _DISPLAY_PER_QUERY = 10
 _FILTER_RADIUS_KM = 3.0
 _KR_LON_RANGE = (124.0, 132.0)
@@ -88,11 +89,13 @@ class PlaceCandidateCollector:
         _logger.info("[Collector] start: area=%r center_coords=%s", area, center_coords)
         loop = asyncio.get_running_loop()
 
-        restaurants, cafes, activities = await asyncio.gather(
-            loop.run_in_executor(None, self._collect_by_queries, self._query_builder.build_restaurant_queries(area)),
-            loop.run_in_executor(None, self._collect_by_queries, self._query_builder.build_cafe_queries(area)),
-            loop.run_in_executor(None, self._collect_by_queries, self._query_builder.build_activity_queries(area)),
+        restaurants, cafes, core_activities, sub_activities = await asyncio.gather(
+            loop.run_in_executor(None, self._collect_by_queries, self._query_builder.build_restaurant_queries(area), _MIN_REQUIRED),
+            loop.run_in_executor(None, self._collect_by_queries, self._query_builder.build_cafe_queries(area), _MIN_REQUIRED),
+            loop.run_in_executor(None, self._collect_by_queries, self._query_builder.build_core_activity_queries(area), _MIN_ACTIVITY_PER_TYPE),
+            loop.run_in_executor(None, self._collect_by_queries, self._query_builder.build_sub_activity_queries(area), _MIN_ACTIVITY_PER_TYPE),
         )
+        activities = core_activities + sub_activities
 
         if center_coords:
             restaurants = _filter_by_radius(restaurants, center_coords, _FILTER_RADIUS_KM)
@@ -125,13 +128,13 @@ class PlaceCandidateCollector:
             shortage_reasons=shortage_reasons,
         )
 
-    def _collect_by_queries(self, queries: List[PlaceSearchQuery]) -> List[CandidatePlace]:
+    def _collect_by_queries(self, queries: List[PlaceSearchQuery], max_results: int = _MIN_REQUIRED) -> List[CandidatePlace]:
         seen: Set[Tuple[str, str]] = set()
         results: List[CandidatePlace] = []
         collected_at = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
 
         for search_query in queries:
-            if len(results) >= _MIN_REQUIRED:
+            if len(results) >= max_results:
                 break
 
             try:
@@ -169,7 +172,7 @@ class PlaceCandidateCollector:
                     )
                 )
 
-                if len(results) >= _MIN_REQUIRED:
+                if len(results) >= max_results:
                     break
 
         return results

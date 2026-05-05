@@ -83,19 +83,28 @@ class PlaceSearchQueryBuilder:
                 )
         return queries
 
-    def build_activity_queries(self, area: str) -> List[PlaceSearchQuery]:
+    def build_core_activity_queries(self, area: str) -> List[PlaceSearchQuery]:
+        return self._build_activity_queries_for_kinds(
+            area, [k for k in ActivityKind if k.is_core]
+        )
+
+    def build_sub_activity_queries(self, area: str) -> List[PlaceSearchQuery]:
+        return self._build_activity_queries_for_kinds(
+            area, [k for k in ActivityKind if not k.is_core]
+        )
+
+    def _build_activity_queries_for_kinds(self, area: str, kinds: List[ActivityKind]) -> List[PlaceSearchQuery]:
         queries: List[PlaceSearchQuery] = []
         for variant in self._area_variants(area):
-            for kind_value, templates in _ACTIVITY_TEMPLATES.items():
-                activity_kind = ActivityKind(kind_value)
-                for tmpl in templates:
+            for kind in kinds:
+                for tmpl in _ACTIVITY_TEMPLATES[kind.value]:
                     query = tmpl.format(area=variant)
                     queries.append(
                         PlaceSearchQuery(
                             query=query,
                             keyword_label=query,
                             place_type=PlaceType.ACTIVITY,
-                            activity_kind=activity_kind,
+                            activity_kind=kind,
                         )
                     )
         return queries
