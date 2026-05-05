@@ -13,7 +13,7 @@ from app.domains.recommendation.service.place_search_query_builder import (
 from app.domains.recommendation.service.search_client_interface import SearchClientInterface
 
 _MIN_REQUIRED = 5
-_DISPLAY_PER_QUERY = 5
+_DISPLAY_PER_QUERY = 10
 _HTML_TAG_PATTERN = re.compile(r"<[^>]+>")
 _logger = logging.getLogger(__name__)
 

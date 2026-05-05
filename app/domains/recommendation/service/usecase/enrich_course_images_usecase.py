@@ -36,10 +36,14 @@ class EnrichCourseImagesUseCase:
                 (course.activity, "activity"),
             ]
         ]
-        await asyncio.gather(*[
+        futures = [
             loop.run_in_executor(None, self._enrich_place, place, label, area)
             for _, place, label in place_tasks
-        ])
+        ]
+        if futures:
+            done, pending = await asyncio.wait(futures, timeout=1.5)
+            for task in pending:
+                task.cancel()
 
         for course in dto.courses:
             course.image_url = self._select_representative(course, area)
