@@ -3,8 +3,8 @@ import logging
 from fastapi import APIRouter, BackgroundTasks, Depends
 
 from app.common.exceptions import NotFoundError
-from app.domains.recommendation.repository.in_memory_recommendation_session_repository import (
-    InMemoryRecommendationSessionRepository,
+from app.domains.recommendation.repository.redis_recommendation_session_repository import (
+    RedisRecommendationSessionRepository,
     get_recommendation_session_repository,
 )
 from app.domains.recommendation.service.dto.request.get_course_detail_request_dto import (
@@ -25,15 +25,15 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/v1/emails", tags=["emails"])
 
 
-def _get_detail_usecase(
-    repository: InMemoryRecommendationSessionRepository = Depends(get_recommendation_session_repository),
+async def _get_detail_usecase(
+    repository: RedisRecommendationSessionRepository = Depends(get_recommendation_session_repository),
 ) -> GetCourseDetailUseCase:
     return GetCourseDetailUseCase(repository=repository)
 
 
-def _send_email_task(to: str, course_id: str, usecase: GetCourseDetailUseCase) -> None:
+async def _send_email_task(to: str, course_id: str, usecase: GetCourseDetailUseCase) -> None:
     try:
-        detail = usecase.execute(GetCourseDetailRequestDto(course_id=course_id))
+        detail = await usecase.execute(GetCourseDetailRequestDto(course_id=course_id))
         subject, html, text = build_course_email(detail)
         send_email(to=to, subject=subject, body_html=html, body_text=text)
     except Exception as e:
@@ -41,12 +41,12 @@ def _send_email_task(to: str, course_id: str, usecase: GetCourseDetailUseCase) -
 
 
 @router.post("/send-course", response_model=SendCourseEmailResponseForm, status_code=200)
-def send_course_email(
+async def send_course_email(
     form: SendCourseEmailRequestForm,
     background_tasks: BackgroundTasks,
     usecase: GetCourseDetailUseCase = Depends(_get_detail_usecase),
 ) -> SendCourseEmailResponseForm:
-    usecase.execute(GetCourseDetailRequestDto(course_id=form.course_id))
+    await usecase.execute(GetCourseDetailRequestDto(course_id=form.course_id))
 
     background_tasks.add_task(_send_email_task, str(form.email), form.course_id, usecase)
 
