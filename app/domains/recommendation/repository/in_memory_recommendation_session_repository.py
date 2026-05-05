@@ -9,11 +9,11 @@ _store: Dict[str, RecommendationSessionDto] = {}
 
 
 class InMemoryRecommendationSessionRepository(RecommendationSessionRepositoryInterface):
-    def save(self, session: RecommendationSessionDto) -> None:
+    async def save(self, session: RecommendationSessionDto) -> None:
         for course in session.courses:
             _store[course.course_id] = session
 
-    def find_by_course_id(self, course_id: str) -> Optional[RecommendationSessionDto]:
+    async def find_by_course_id(self, course_id: str) -> Optional[RecommendationSessionDto]:
         return _store.get(course_id)
 
 
