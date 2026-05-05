@@ -10,7 +10,7 @@ from app.domains.recommendation.domain.value_object.place_type import PlaceType
 from app.domains.recommendation.service.candidate_cache_interface import CandidateCacheInterface
 from app.domains.recommendation.service.place_candidate_collector import PlaceCandidateCollection
 
-_TTL_SECONDS = 60 * 30  # 30분
+_TTL_SECONDS = 60 * 120  # 2시간
 
 
 class RedisCandidateCache(CandidateCacheInterface):
