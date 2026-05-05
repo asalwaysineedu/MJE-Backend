@@ -51,23 +51,23 @@ class CourseScorerService:
         return 0
 
     def _time_slot_score(self, time_slot: TimeSlot, ordered_result: OrderedCourseResult) -> int:
-        activity_place = next(
-            (p for p in ordered_result.places if p.place_type == PlaceType.ACTIVITY), None
-        )
-        if activity_place is None:
+        activity_places = [p for p in ordered_result.places if p.place_type == PlaceType.ACTIVITY]
+        if not activity_places:
             return 3
-        if activity_place.place.activity_kind is not None:
-            activity_type = activity_place.place.activity_kind.activity_type
-            return _TIMESLOT_ACTIVITY_SCORES[time_slot][activity_type]
-        return 3
+        # 나이트라이프(SUB)가 하나라도 있으면 SUB 기준으로 채점 — 낮 시간대 페널티 적용
+        has_sub = any(
+            p.place.activity_kind is not None
+            and p.place.activity_kind.activity_type == ActivityType.SUB_ACTIVITY
+            for p in activity_places
+        )
+        key = ActivityType.SUB_ACTIVITY if has_sub else ActivityType.CORE_ACTIVITY
+        return _TIMESLOT_ACTIVITY_SCORES[time_slot][key]
 
     def _diversity_score(self, ordered_result: OrderedCourseResult) -> int:
-        activity_place = next(
-            (p for p in ordered_result.places if p.place_type == PlaceType.ACTIVITY), None
-        )
-        if activity_place is None:
+        activity_places = [p for p in ordered_result.places if p.place_type == PlaceType.ACTIVITY]
+        if not activity_places:
             return 1
-        return 3 if activity_place.place.activity_kind is not None else 1
+        return 3 if any(p.place.activity_kind is not None for p in activity_places) else 1
 
     def _duplicate_penalty(
         self,

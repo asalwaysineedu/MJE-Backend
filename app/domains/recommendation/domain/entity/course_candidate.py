@@ -6,5 +6,5 @@ from app.domains.recommendation.domain.value_object.candidate_place import Candi
 @dataclass
 class CourseCandidate:
     restaurant: CandidatePlace
-    cafe: CandidatePlace
-    activity: CandidatePlace
+    second: CandidatePlace
+    third: CandidatePlace

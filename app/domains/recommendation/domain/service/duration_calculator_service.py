@@ -31,7 +31,7 @@ class DurationCalculatorService:
         transport: Transport,
     ) -> DurationResult:
         return self.calculate_for_places(
-            [candidate.restaurant, candidate.cafe, candidate.activity],
+            [candidate.restaurant, candidate.second, candidate.third],
             start_time,
             transport,
         )

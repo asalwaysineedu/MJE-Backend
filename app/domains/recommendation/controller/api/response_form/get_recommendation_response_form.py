@@ -8,6 +8,8 @@ from app.domains.recommendation.service.dto.response.get_recommendation_response
 
 
 class RecommendationPlaceResponseForm(BaseModel):
+    order: int
+    place_type: str
     id: int
     name: str
     category: str
@@ -19,15 +21,14 @@ class RecommendationPlaceResponseForm(BaseModel):
     telephone: str
     keyword: str
     collected_at: str
+    duration_minutes: int
     image_url: Optional[str]
 
 
 class RecommendationCourseItemResponseForm(BaseModel):
     course_id: str
     grade: str
-    restaurant: RecommendationPlaceResponseForm
-    cafe: RecommendationPlaceResponseForm
-    activity: RecommendationPlaceResponseForm
+    places: List[RecommendationPlaceResponseForm]
     image_url: Optional[str]
 
 
@@ -41,9 +42,7 @@ class GetRecommendationResponseForm(BaseModel):
             RecommendationCourseItemResponseForm(
                 course_id=item.course_id,
                 grade=item.grade,
-                restaurant=RecommendationPlaceResponseForm(**vars(item.restaurant)),
-                cafe=RecommendationPlaceResponseForm(**vars(item.cafe)),
-                activity=RecommendationPlaceResponseForm(**vars(item.activity)),
+                places=[RecommendationPlaceResponseForm(**vars(p)) for p in item.places],
                 image_url=item.image_url,
             )
             for item in dto.courses

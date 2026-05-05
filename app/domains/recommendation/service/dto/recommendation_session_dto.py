@@ -20,9 +20,7 @@ class RecommendationSessionDto:
             RecommendationCourseItemDto(
                 course_id=item["course_id"],
                 grade=item["grade"],
-                restaurant=RecommendationPlaceDto(**item["restaurant"]),
-                cafe=RecommendationPlaceDto(**item["cafe"]),
-                activity=RecommendationPlaceDto(**item["activity"]),
+                places=[RecommendationPlaceDto(**p) for p in item["places"]],
                 image_url=item.get("image_url"),
             )
             for item in data.get("courses", [])

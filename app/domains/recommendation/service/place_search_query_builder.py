@@ -34,7 +34,7 @@ _CAFE_TEMPLATES = [
 
 _ACTIVITY_TEMPLATES: Dict[str, List[str]] = {
     ActivityKind.EXHIBITION.value: ["{area} 전시", "{area} 미술관"],
-    ActivityKind.WALK.value: ["{area} 산책", "{area} 공원"],
+    ActivityKind.WALK.value: ["{area} 공원", "{area} 산책로"],
     ActivityKind.SHOPPING.value: ["{area} 쇼핑", "{area} 편집샵"],
     ActivityKind.POPUP.value: ["{area} 팝업스토어"],
     ActivityKind.WORKSHOP.value: ["{area} 공방", "{area} 체험"],
@@ -83,31 +83,17 @@ class PlaceSearchQueryBuilder:
                 )
         return queries
 
-    def build_core_activity_queries(self, area: str) -> List[PlaceSearchQuery]:
-        return self._build_activity_queries_for_kinds(
-            area, [k for k in ActivityKind if k.is_core]
-        )
-
-    def build_sub_activity_queries(self, area: str) -> List[PlaceSearchQuery]:
-        return self._build_activity_queries_for_kinds(
-            area, [k for k in ActivityKind if not k.is_core]
-        )
-
-    def _build_activity_queries_for_kinds(self, area: str, kinds: List[ActivityKind]) -> List[PlaceSearchQuery]:
-        queries: List[PlaceSearchQuery] = []
-        for variant in self._area_variants(area):
-            for kind in kinds:
-                for tmpl in _ACTIVITY_TEMPLATES[kind.value]:
-                    query = tmpl.format(area=variant)
-                    queries.append(
-                        PlaceSearchQuery(
-                            query=query,
-                            keyword_label=query,
-                            place_type=PlaceType.ACTIVITY,
-                            activity_kind=kind,
-                        )
-                    )
-        return queries
+    def build_activity_queries_for_kind(self, area: str, kind: ActivityKind) -> List[PlaceSearchQuery]:
+        primary = self._area_variants(area)[0]
+        return [
+            PlaceSearchQuery(
+                query=tmpl.format(area=primary),
+                keyword_label=tmpl.format(area=primary),
+                place_type=PlaceType.ACTIVITY,
+                activity_kind=kind,
+            )
+            for tmpl in _ACTIVITY_TEMPLATES[kind.value]
+        ]
 
     def _area_variants(self, area: str) -> List[str]:
         area = area.strip()

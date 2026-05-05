@@ -4,6 +4,8 @@ from typing import List, Optional
 
 @dataclass
 class RecommendationPlaceDto:
+    order: int
+    place_type: str
     id: int
     name: str
     category: str
@@ -15,6 +17,7 @@ class RecommendationPlaceDto:
     telephone: str
     keyword: str
     collected_at: str
+    duration_minutes: int
     image_url: Optional[str] = None
 
 
@@ -22,9 +25,7 @@ class RecommendationPlaceDto:
 class RecommendationCourseItemDto:
     course_id: str
     grade: str
-    restaurant: RecommendationPlaceDto
-    cafe: RecommendationPlaceDto
-    activity: RecommendationPlaceDto
+    places: List[RecommendationPlaceDto]
     image_url: Optional[str] = None
 
 

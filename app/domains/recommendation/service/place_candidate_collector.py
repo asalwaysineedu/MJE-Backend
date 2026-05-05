@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import List, Optional, Set, Tuple
 
+from app.domains.recommendation.domain.value_object.activity_type import ActivityKind
 from app.domains.recommendation.domain.value_object.candidate_place import CandidatePlace
 from app.domains.recommendation.service.place_search_query_builder import (
     PlaceSearchQuery,
@@ -14,13 +15,25 @@ from app.domains.recommendation.service.place_search_query_builder import (
 from app.domains.recommendation.service.search_client_interface import SearchClientInterface
 
 _MIN_REQUIRED = 5
-_MIN_ACTIVITY_PER_TYPE = 3
 _DISPLAY_PER_QUERY = 10
 _FILTER_RADIUS_KM = 3.0
 _KR_LON_RANGE = (124.0, 132.0)
 _KR_LAT_RANGE = (33.0, 39.0)
 _HTML_TAG_PATTERN = re.compile(r"<[^>]+>")
 _logger = logging.getLogger(__name__)
+
+# 검색 결과에서 제외할 카테고리 키워드 (데이트 코스와 무관한 업종)
+_CATEGORY_BLACKLIST = frozenset([
+    "반려동물", "애견", "동물병원", "수의사", "동물",
+    "병원", "의원", "약국", "한의원", "치과",
+    "부동산", "공인중개", "법무사", "변호사", "세무",
+    "주유소", "세차", "자동차",
+    "편의점", "마트", "슈퍼마켓",
+])
+
+
+def _is_blacklisted_category(category: str) -> bool:
+    return any(bad in category for bad in _CATEGORY_BLACKLIST)
 
 
 def _parse_wgs84(mapx: str, mapy: str) -> Optional[Tuple[float, float]]:
@@ -89,13 +102,18 @@ class PlaceCandidateCollector:
         _logger.info("[Collector] start: area=%r center_coords=%s", area, center_coords)
         loop = asyncio.get_running_loop()
 
-        restaurants, cafes, core_activities, sub_activities = await asyncio.gather(
+        all_kinds = list(ActivityKind)
+        results = await asyncio.gather(
             loop.run_in_executor(None, self._collect_by_queries, self._query_builder.build_restaurant_queries(area), _MIN_REQUIRED),
             loop.run_in_executor(None, self._collect_by_queries, self._query_builder.build_cafe_queries(area), _MIN_REQUIRED),
-            loop.run_in_executor(None, self._collect_by_queries, self._query_builder.build_core_activity_queries(area), _MIN_ACTIVITY_PER_TYPE),
-            loop.run_in_executor(None, self._collect_by_queries, self._query_builder.build_sub_activity_queries(area), _MIN_ACTIVITY_PER_TYPE),
+            *[
+                loop.run_in_executor(None, self._collect_by_queries, self._query_builder.build_activity_queries_for_kind(area, kind), 1)
+                for kind in all_kinds
+            ],
         )
-        activities = core_activities + sub_activities
+        restaurants = results[0]
+        cafes = results[1]
+        activities = [place for places in results[2:] for place in places]
 
         if center_coords:
             restaurants = _filter_by_radius(restaurants, center_coords, _FILTER_RADIUS_KM)
@@ -146,6 +164,9 @@ class PlaceCandidateCollector:
             for raw in raw_items:
                 address = raw.road_address or raw.address
                 if not address:
+                    continue
+
+                if _is_blacklisted_category(raw.category):
                     continue
 
                 name = _strip_html(raw.title)
