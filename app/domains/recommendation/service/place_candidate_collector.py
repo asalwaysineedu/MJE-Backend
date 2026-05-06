@@ -18,6 +18,7 @@ from app.domains.recommendation.service.search_client_interface import SearchCli
 _MIN_REQUIRED = 5
 _DISPLAY_PER_QUERY = 10
 _FILTER_RADIUS_KM = 3.0
+_ACTIVITY_MAX_RESULTS = 3
 _SEARCH_EXECUTOR = concurrent.futures.ThreadPoolExecutor(max_workers=20)
 _KR_LON_RANGE = (124.0, 132.0)
 _KR_LAT_RANGE = (33.0, 39.0)
@@ -32,6 +33,9 @@ _CATEGORY_BLACKLIST = frozenset([
     "주유소", "세차", "자동차",
     "편의점", "마트", "슈퍼마켓",
 ])
+
+# 활동 후보에서 제외할 카테고리 — 카페/식당류가 activity 슬롯에 들어가는 것을 방지
+_ACTIVITY_CATEGORY_EXCLUDE = frozenset(["카페", "커피"])
 
 
 def _is_blacklisted_category(category: str) -> bool:
@@ -109,13 +113,16 @@ class PlaceCandidateCollector:
             loop.run_in_executor(_SEARCH_EXECUTOR, self._collect_by_queries, self._query_builder.build_restaurant_queries(area), _MIN_REQUIRED),
             loop.run_in_executor(_SEARCH_EXECUTOR, self._collect_by_queries, self._query_builder.build_cafe_queries(area), _MIN_REQUIRED),
             *[
-                loop.run_in_executor(_SEARCH_EXECUTOR, self._collect_by_queries, self._query_builder.build_activity_queries_for_kind(area, kind), 1)
+                loop.run_in_executor(_SEARCH_EXECUTOR, self._collect_by_queries, self._query_builder.build_activity_queries_for_kind(area, kind), _ACTIVITY_MAX_RESULTS)
                 for kind in all_kinds
             ],
         )
         restaurants = results[0]
         cafes = results[1]
-        activities = [place for places in results[2:] for place in places]
+        activities = [
+            place for places in results[2:] for place in places
+            if not any(kw in place.category for kw in _ACTIVITY_CATEGORY_EXCLUDE)
+        ]
 
         if center_coords:
             restaurants = _filter_by_radius(restaurants, center_coords, _FILTER_RADIUS_KM)
