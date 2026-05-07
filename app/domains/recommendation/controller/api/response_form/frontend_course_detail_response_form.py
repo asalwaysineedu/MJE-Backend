@@ -72,6 +72,78 @@ class FrontendCourseDetailResponseForm(BaseModel):
         )
 
 
+class FrontendPlaceDetailItemForm(BaseModel):
+    id: str
+    time: Optional[str] = None
+    location: str
+    name: str
+    description: str
+    imageUrl: Optional[str] = None
+
+
+class FrontendActivitiesListForm(BaseModel):
+    activities: List[FrontendPlaceDetailItemForm]
+
+    @classmethod
+    def from_dto(cls, dto: GetCourseDetailResponseDto) -> "FrontendActivitiesListForm":
+        return cls(
+            activities=[
+                FrontendPlaceDetailItemForm(
+                    id=f"{dto.course_id}-{p.order}",
+                    time=p.start_time or None,
+                    location=p.road_address or p.address,
+                    name=p.name,
+                    description=p.short_description,
+                    imageUrl=p.image_url,
+                )
+                for p in dto.places
+                if p.place_type == "activity"
+            ]
+        )
+
+
+class FrontendCafesListForm(BaseModel):
+    cafes: List[FrontendPlaceDetailItemForm]
+
+    @classmethod
+    def from_dto(cls, dto: GetCourseDetailResponseDto) -> "FrontendCafesListForm":
+        return cls(
+            cafes=[
+                FrontendPlaceDetailItemForm(
+                    id=f"{dto.course_id}-{p.order}",
+                    time=p.start_time or None,
+                    location=p.road_address or p.address,
+                    name=p.name,
+                    description=p.short_description,
+                    imageUrl=p.image_url,
+                )
+                for p in dto.places
+                if p.place_type == "cafe"
+            ]
+        )
+
+
+class FrontendRestaurantsListForm(BaseModel):
+    restaurants: List[FrontendPlaceDetailItemForm]
+
+    @classmethod
+    def from_dto(cls, dto: GetCourseDetailResponseDto) -> "FrontendRestaurantsListForm":
+        return cls(
+            restaurants=[
+                FrontendPlaceDetailItemForm(
+                    id=f"{dto.course_id}-{p.order}",
+                    time=p.start_time or None,
+                    location=p.road_address or p.address,
+                    name=p.name,
+                    description=p.short_description,
+                    imageUrl=p.image_url,
+                )
+                for p in dto.places
+                if p.place_type == "restaurant"
+            ]
+        )
+
+
 class FrontendOtherCourseItemForm(BaseModel):
     courseId: str
     name: str

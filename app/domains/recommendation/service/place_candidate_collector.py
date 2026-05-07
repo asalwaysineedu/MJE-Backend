@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from typing import List, Optional, Set, Tuple
 
 from app.domains.recommendation.domain.value_object.place import Place
+from app.domains.recommendation.domain.value_object.place_type import PlaceType
 from app.domains.recommendation.service.place_search_query_builder import (
     ActivityKind,
     PlaceSearchQuery,
@@ -36,6 +37,10 @@ _CATEGORY_BLACKLIST = frozenset([
 
 _ACTIVITY_CAFE_EXCLUDE = frozenset(["카페", "커피"])
 
+_RESTAURANT_CATEGORY_EXCLUDE = frozenset([
+    "카페", "커피", "베이커리", "빵", "디저트",
+])
+
 
 def _is_blacklisted(category: str) -> bool:
     return any(bad in category for bad in _CATEGORY_BLACKLIST)
@@ -57,7 +62,7 @@ def _in_korea(lat: float, lon: float) -> bool:
 
 
 def _filter_by_radius(places: List[Place], center: Tuple[float, float], radius_km: float) -> List[Place]:
-    center_lat, center_lon = center
+    center_lon, center_lat = center
     result = []
     for place in places:
         if not _in_korea(place.latitude, place.longitude):
@@ -217,6 +222,11 @@ class PlaceCandidateCollector:
                 if not (raw.road_address or raw.address):
                     continue
                 if _is_blacklisted(raw.category):
+                    continue
+                if (
+                    search_query.place_type == PlaceType.RESTAURANT
+                    and any(kw in raw.category for kw in _RESTAURANT_CATEGORY_EXCLUDE)
+                ):
                     continue
 
                 place_key = f"{raw.title}|{raw.road_address or raw.address}"

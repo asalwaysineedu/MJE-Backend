@@ -3,8 +3,8 @@ from fastapi import APIRouter, Depends
 from app.domains.recommendation.controller.api.request_form.get_recommendation_request_form import (
     GetRecommendationRequestForm,
 )
-from app.domains.recommendation.controller.api.response_form.get_course_detail_response_form import (
-    GetCourseDetailResponseForm,
+from app.domains.recommendation.controller.api.response_form.frontend_course_detail_response_form import (
+    FrontendCourseDetailResponseForm,
 )
 from app.domains.recommendation.controller.api.response_form.get_recommendation_response_form import (
     GetRecommendationResponseForm,
@@ -69,11 +69,11 @@ async def get_recommendations(
     return GetRecommendationResponseForm.from_response(result)
 
 
-@router.get("/recommendations/{course_id}", response_model=GetCourseDetailResponseForm)
+@router.get("/recommendations/{course_id}", response_model=FrontendCourseDetailResponseForm)
 async def get_course_detail(
     course_id: str,
     usecase: GetCourseDetailUseCase = Depends(_get_course_detail_usecase),
-) -> GetCourseDetailResponseForm:
+) -> FrontendCourseDetailResponseForm:
     dto = GetCourseDetailRequestDto(course_id=course_id)
     result = await usecase.execute(dto)
-    return GetCourseDetailResponseForm.from_response(result)
+    return FrontendCourseDetailResponseForm.from_dto(result)
