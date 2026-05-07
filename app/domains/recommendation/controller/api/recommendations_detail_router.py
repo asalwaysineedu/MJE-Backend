@@ -1,8 +1,11 @@
 from fastapi import APIRouter, Depends
 
 from app.domains.recommendation.controller.api.response_form.frontend_course_detail_response_form import (
+    FrontendActivitiesListForm,
+    FrontendCafesListForm,
     FrontendCourseDetailResponseForm,
     FrontendOtherCoursesListForm,
+    FrontendRestaurantsListForm,
 )
 from app.domains.recommendation.repository.redis_recommendation_session_repository import (
     RedisRecommendationSessionRepository,
@@ -49,3 +52,33 @@ async def get_other_courses_frontend(
     dto = GetCourseDetailRequestDto(course_id=course_id)
     result = await usecase.execute(dto)
     return FrontendOtherCoursesListForm.from_dto(result)
+
+
+@router.get("/detail/{course_id}/activities", response_model=FrontendActivitiesListForm)
+async def get_course_activities_frontend(
+    course_id: str,
+    usecase: GetCourseDetailUseCase = Depends(_get_course_detail_usecase),
+) -> FrontendActivitiesListForm:
+    dto = GetCourseDetailRequestDto(course_id=course_id)
+    result = await usecase.execute(dto)
+    return FrontendActivitiesListForm.from_dto(result)
+
+
+@router.get("/detail/{course_id}/cafes", response_model=FrontendCafesListForm)
+async def get_course_cafes_frontend(
+    course_id: str,
+    usecase: GetCourseDetailUseCase = Depends(_get_course_detail_usecase),
+) -> FrontendCafesListForm:
+    dto = GetCourseDetailRequestDto(course_id=course_id)
+    result = await usecase.execute(dto)
+    return FrontendCafesListForm.from_dto(result)
+
+
+@router.get("/detail/{course_id}/restaurants", response_model=FrontendRestaurantsListForm)
+async def get_course_restaurants_frontend(
+    course_id: str,
+    usecase: GetCourseDetailUseCase = Depends(_get_course_detail_usecase),
+) -> FrontendRestaurantsListForm:
+    dto = GetCourseDetailRequestDto(course_id=course_id)
+    result = await usecase.execute(dto)
+    return FrontendRestaurantsListForm.from_dto(result)

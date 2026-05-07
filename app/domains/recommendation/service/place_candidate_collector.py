@@ -57,7 +57,7 @@ def _in_korea(lat: float, lon: float) -> bool:
 
 
 def _filter_by_radius(places: List[Place], center: Tuple[float, float], radius_km: float) -> List[Place]:
-    center_lat, center_lon = center
+    center_lon, center_lat = center
     result = []
     for place in places:
         if not _in_korea(place.latitude, place.longitude):
