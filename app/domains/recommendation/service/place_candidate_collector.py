@@ -68,6 +68,7 @@ _NAME_BLACKLIST = frozenset([
     # 특정 장소
     "탑골공원", "신사목련공원", "전주콩나물국밥",
     "락휴노래연습장", "플레이그라운드", "무형유산전수회관",
+    "압구정공주떡",
 ])
 
 _ACTIVITY_CAFE_EXCLUDE = frozenset(["카페", "커피"])
