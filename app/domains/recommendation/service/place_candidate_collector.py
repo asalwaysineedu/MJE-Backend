@@ -73,6 +73,8 @@ _NAME_BLACKLIST = frozenset([
     "쇼핑", "쇼핑몰", "쇼핑타운",
     # 교육기관
     "대학교",
+    # 경매
+    "옥션",
 ])
 
 _ACTIVITY_CAFE_EXCLUDE = frozenset(["카페", "커피"])
