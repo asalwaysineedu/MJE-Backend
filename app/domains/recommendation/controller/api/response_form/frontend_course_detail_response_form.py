@@ -33,6 +33,7 @@ class FrontendCourseDetailResponseForm(BaseModel):
     totalDuration: int
     locationSummary: str
     routeSummary: str
+    transport: str
     places: List[FrontendPlaceResponseForm]
     subCourses: List[FrontendSubCourseResponseForm]
 
@@ -46,6 +47,7 @@ class FrontendCourseDetailResponseForm(BaseModel):
             totalDuration=dto.estimated_duration_minutes,
             locationSummary=dto.area,
             routeSummary=route_summary,
+            transport=dto.transport,
             places=[
                 FrontendPlaceResponseForm(
                     visitOrder=p.order,
