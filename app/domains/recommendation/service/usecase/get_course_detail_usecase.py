@@ -1,3 +1,4 @@
+import math
 from typing import Dict, List, Optional
 
 from app.common.exceptions import NotFoundError
@@ -17,6 +18,15 @@ from app.domains.recommendation.service.dto.recommendation_session_dto import Re
 from app.domains.recommendation.service.dto.response.get_recommendation_response_dto import (
     RecommendationCourseItemDto,
 )
+
+def _travel_minutes(lat1: float, lon1: float, lat2: float, lon2: float, speed_mps: float) -> int:
+    R = 6_371_000.0
+    dlat = math.radians(lat2 - lat1)
+    dlon = math.radians(lon2 - lon1)
+    a = math.sin(dlat / 2) ** 2 + math.cos(math.radians(lat1)) * math.cos(math.radians(lat2)) * math.sin(dlon / 2) ** 2
+    distance_m = R * 2 * math.asin(math.sqrt(a))
+    return max(1, round(distance_m / speed_mps / 60))
+
 
 _SHORT_DESCRIPTIONS: Dict[str, str] = {
     "restaurant": "맛있는 식사로 데이트를 풍성하게 즐기세요.",
@@ -47,16 +57,16 @@ class GetCourseDetailUseCase:
         if selected is None:
             raise NotFoundError(f"course_id '{dto.course_id}' not found")
 
-        move_minutes = self._resolve_move_minutes(session.transport)
-        places = self._build_places(selected, move_minutes)
-        total_duration = sum(p.duration_minutes for p in places) + move_minutes * (len(places) - 1)
+        transport = Transport(session.transport)
+        places = self._build_places(selected, transport)
+        total_duration = sum(p.duration_minutes + (p.move_time_to_next_minutes or 0) for p in places)
 
         place_names = [p.name for p in places]
         title = f"{session.area}에서 즐기는 데이트 코스"
         description = f"{session.area}에서 {', '.join(place_names)}을(를) 즐기는 하루 코스입니다."
 
         other_courses = [
-            self._to_other_course_dto(c, session, move_minutes)
+            self._to_other_course_dto(c, session, transport)
             for c in session.courses
             if c.course_id != dto.course_id
         ]
@@ -77,16 +87,20 @@ class GetCourseDetailUseCase:
     def _build_places(
         self,
         course: RecommendationCourseItemDto,
-        move_minutes: int,
+        transport: Transport,
     ) -> List[CourseDetailPlaceDto]:
         result = []
         for i, place in enumerate(course.places):
             is_last = i == len(course.places) - 1
-            move_to_next: Optional[int] = None if is_last else move_minutes
-
-            # Use pre-computed times if available, otherwise fall back to computing
-            start_time = place.start_time
-            end_time = place.end_time
+            if is_last:
+                move_to_next: Optional[int] = None
+            else:
+                next_place = course.places[i + 1]
+                move_to_next = _travel_minutes(
+                    place.latitude, place.longitude,
+                    next_place.latitude, next_place.longitude,
+                    transport.speed_mps,
+                )
 
             result.append(
                 CourseDetailPlaceDto(
@@ -102,8 +116,8 @@ class GetCourseDetailUseCase:
                     telephone=place.telephone,
                     activity_type=place.activity_type,
                     image_url=place.image_url,
-                    start_time=start_time,
-                    end_time=end_time,
+                    start_time=place.start_time,
+                    end_time=place.end_time,
                     duration_minutes=place.duration_minutes,
                     move_time_to_next_minutes=move_to_next,
                     short_description=_SHORT_DESCRIPTIONS.get(
@@ -118,10 +132,17 @@ class GetCourseDetailUseCase:
         self,
         course: RecommendationCourseItemDto,
         session: RecommendationSessionDto,
-        move_minutes: int,
+        transport: Transport,
     ) -> OtherCourseDto:
         route_summary = " > ".join(p.name for p in course.places)
-        total_duration = sum(p.duration_minutes for p in course.places) + move_minutes * (len(course.places) - 1)
+        places = course.places
+        total_duration = sum(p.duration_minutes for p in places)
+        for i in range(len(places) - 1):
+            total_duration += _travel_minutes(
+                places[i].latitude, places[i].longitude,
+                places[i + 1].latitude, places[i + 1].longitude,
+                transport.speed_mps,
+            )
         return OtherCourseDto(
             course_id=course.course_id,
             grade=course.grade,
@@ -130,9 +151,3 @@ class GetCourseDetailUseCase:
             area=session.area,
             estimated_duration_minutes=total_duration,
         )
-
-    def _resolve_move_minutes(self, transport_value: str) -> int:
-        try:
-            return Transport(transport_value).base_move_minutes
-        except ValueError:
-            return Transport.WALK.base_move_minutes

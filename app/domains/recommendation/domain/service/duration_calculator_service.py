@@ -63,14 +63,17 @@ class DurationCalculatorService:
         start_time: str,
         transport: Transport,
     ) -> List[CoursePlace]:
-        move_time = transport.max_travel_minutes
         result: List[CoursePlace] = []
         current_time = start_time
 
         for i, place in enumerate(places):
             duration = _get_duration(place)
             is_last = i == len(places) - 1
-            move_to_next = 0 if is_last else move_time
+            if is_last:
+                move_to_next = 0
+            else:
+                distance_m = place.distance_to(places[i + 1])
+                move_to_next = max(1, round(distance_m / transport.speed_mps / 60))
             end_time = _add_minutes(current_time, duration)
 
             result.append(CoursePlace(
