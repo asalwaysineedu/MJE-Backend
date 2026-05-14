@@ -2,6 +2,7 @@ import asyncio
 import concurrent.futures
 import logging
 import math
+import dataclasses
 from dataclasses import dataclass
 from typing import List, Optional, Set, Tuple
 
@@ -66,7 +67,7 @@ _NAME_BLACKLIST = frozenset([
     # 영화관
     "메가박스", "롯데시네마", "cgv", "CGV",
     # 특정 장소
-    "탑골공원", "신사목련공원", "전주콩나물국밥",
+    "탑골공원", "신사목련공원", "신사은행나무공원", "전주콩나물국밥",
     "락휴노래연습장", "플레이그라운드", "무형유산전수회관",
     "압구정공주떡",
     # 쇼핑
@@ -213,12 +214,23 @@ class PlaceCandidateCollector:
 
         restaurants: List[Place] = results[0]
         cafes: List[Place] = results[1]
-        activities: List[Place] = [
-            place
-            for places in results[2:]
-            for place in places
-            if not _is_cafe_like_nonnightlife(place)
-        ]
+
+        activities: List[Place] = []
+        cafe_extras: List[Place] = []
+        for places in results[2:]:
+            for place in places:
+                if _is_cafe_like_nonnightlife(place):
+                    cafe_extras.append(
+                        dataclasses.replace(place, category=PlaceType.CAFE.value, activity_type=None)
+                    )
+                else:
+                    activities.append(place)
+
+        existing_cafe_keys = {p.place_key for p in cafes}
+        for extra in cafe_extras:
+            if extra.place_key not in existing_cafe_keys:
+                cafes.append(extra)
+                existing_cafe_keys.add(extra.place_key)
 
         if center_coords:
             restaurants = _filter_by_radius(restaurants, center_coords, _FILTER_RADIUS_KM)
