@@ -4,7 +4,7 @@ from typing import Dict, List, Optional
 from app.domains.recommendation.domain.value_object.place_type import PlaceType
 from app.domains.recommendation.service.place_search_query_builder import ActivityKind
 
-CURATED_SCORE = 0.6
+CURATED_SCORE = 0.9
 
 
 @dataclass(frozen=True)
