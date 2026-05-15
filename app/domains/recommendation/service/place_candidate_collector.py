@@ -298,54 +298,77 @@ class PlaceCandidateCollector:
         seen: set = set()
 
         for config in configs:
-            try:
-                raw_items = self._client.search_places(config.search_query, 1)
-            except Exception as e:
-                _logger.error("[Curated] error: query=%r error=%r", config.search_query, str(e))
-                continue
-
-            if not raw_items:
-                _logger.warning("[Curated] no result: query=%r", config.search_query)
-                continue
-
-            raw = raw_items[0]
-            if not (raw.road_address or raw.address):
-                continue
-
-            place_key = f"{raw.title}|{raw.road_address or raw.address}"
-            if place_key in seen:
-                continue
-            seen.add(place_key)
-
-            try:
-                lat = float(raw.mapy) if raw.mapy else 0.0
-                lon = float(raw.mapx) if raw.mapx else 0.0
-            except (ValueError, TypeError):
-                lat, lon = 0.0, 0.0
-
-            road_addr = raw.road_address or ""
-            addr = raw.address or ""
-            tokens = (road_addr or addr).split()
-            area_token = tokens[1] if len(tokens) > 1 else (tokens[0] if tokens else "")
-            keywords = [k.strip() for k in raw.category.split(">") if k.strip()]
             activity_type = config.activity_kind.activity_type.value if config.activity_kind else None
 
-            place = Place(
-                name=raw.title,
-                area=area_token,
-                category=config.place_type.value,
-                address=addr,
-                road_address=road_addr,
-                latitude=lat,
-                longitude=lon,
-                search_rank=1,
-                keywords=keywords,
-                activity_type=activity_type,
-                score=CURATED_SCORE,
-                place_key=place_key,
-                link=raw.link,
-                telephone=raw.telephone,
-            )
+            if config.latitude is not None and config.longitude is not None:
+                place_key = f"{config.search_query}|coords:{config.latitude},{config.longitude}"
+                if place_key in seen:
+                    continue
+                seen.add(place_key)
+                place = Place(
+                    name=config.search_query,
+                    area=area,
+                    category=config.place_type.value,
+                    address="",
+                    road_address="",
+                    latitude=config.latitude,
+                    longitude=config.longitude,
+                    search_rank=1,
+                    keywords=[],
+                    activity_type=activity_type,
+                    score=CURATED_SCORE,
+                    place_key=place_key,
+                    link="",
+                    telephone="",
+                )
+            else:
+                try:
+                    raw_items = self._client.search_places(config.search_query, 1)
+                except Exception as e:
+                    _logger.error("[Curated] error: query=%r error=%r", config.search_query, str(e))
+                    continue
+
+                if not raw_items:
+                    _logger.warning("[Curated] no result: query=%r", config.search_query)
+                    continue
+
+                raw = raw_items[0]
+                if not (raw.road_address or raw.address):
+                    continue
+
+                place_key = f"{raw.title}|{raw.road_address or raw.address}"
+                if place_key in seen:
+                    continue
+                seen.add(place_key)
+
+                try:
+                    lat = float(raw.mapy) if raw.mapy else 0.0
+                    lon = float(raw.mapx) if raw.mapx else 0.0
+                except (ValueError, TypeError):
+                    lat, lon = 0.0, 0.0
+
+                road_addr = raw.road_address or ""
+                addr = raw.address or ""
+                tokens = (road_addr or addr).split()
+                area_token = tokens[1] if len(tokens) > 1 else (tokens[0] if tokens else "")
+                keywords = [k.strip() for k in raw.category.split(">") if k.strip()]
+
+                place = Place(
+                    name=raw.title,
+                    area=area_token,
+                    category=config.place_type.value,
+                    address=addr,
+                    road_address=road_addr,
+                    latitude=lat,
+                    longitude=lon,
+                    search_rank=1,
+                    keywords=keywords,
+                    activity_type=activity_type,
+                    score=CURATED_SCORE,
+                    place_key=place_key,
+                    link=raw.link,
+                    telephone=raw.telephone,
+                )
 
             if config.place_type == PlaceType.RESTAURANT:
                 restaurants.append(place)
