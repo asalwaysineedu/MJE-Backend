@@ -1,3 +1,5 @@
+from typing import Optional
+
 from pydantic import BaseModel, field_validator
 
 from app.domains.home.domain.events.home_event import HomeEventType
@@ -9,6 +11,9 @@ class HomeEventRequestForm(BaseModel):
     session_id: str
     timestamp: str
     page_path: str
+    utm_source: Optional[str] = None
+    utm_medium: Optional[str] = None
+    referrer: Optional[str] = None
 
     @field_validator("event_name")
     @classmethod
@@ -24,4 +29,7 @@ class HomeEventRequestForm(BaseModel):
             session_id=self.session_id,
             timestamp=self.timestamp,
             page_path=self.page_path,
+            utm_source=self.utm_source,
+            utm_medium=self.utm_medium,
+            referrer=self.referrer,
         )

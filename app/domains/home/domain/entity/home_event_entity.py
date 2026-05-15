@@ -11,3 +11,6 @@ class HomeEventEntity:
     timestamp: str
     page_path: str
     id: Optional[int] = None
+    utm_source: Optional[str] = None
+    utm_medium: Optional[str] = None
+    referrer: Optional[str] = None

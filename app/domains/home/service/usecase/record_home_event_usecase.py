@@ -14,6 +14,9 @@ class RecordHomeEventUseCase:
             session_id=dto.session_id,
             timestamp=dto.timestamp,
             page_path=dto.page_path,
+            utm_source=dto.utm_source,
+            utm_medium=dto.utm_medium,
+            referrer=dto.referrer,
         )
         await self._repository.save(entity)
         return RecordHomeEventResponseDto(success=True)

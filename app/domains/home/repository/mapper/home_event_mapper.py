@@ -9,6 +9,9 @@ def to_orm(entity: HomeEventEntity) -> HomeEventOrm:
         session_id=entity.session_id,
         timestamp=entity.timestamp,
         page_path=entity.page_path,
+        utm_source=entity.utm_source,
+        utm_medium=entity.utm_medium,
+        referrer=entity.referrer,
     )
 
 
@@ -19,4 +22,7 @@ def to_entity(orm: HomeEventOrm) -> HomeEventEntity:
         session_id=orm.session_id,
         timestamp=orm.timestamp,
         page_path=orm.page_path,
+        utm_source=orm.utm_source,
+        utm_medium=orm.utm_medium,
+        referrer=orm.referrer,
     )

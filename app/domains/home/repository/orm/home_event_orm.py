@@ -14,4 +14,7 @@ class HomeEventOrm(Base):
     session_id = Column(String(255), nullable=False)
     timestamp = Column(String(50), nullable=False)
     page_path = Column(String(500), nullable=False)
+    utm_source = Column(String(100), nullable=True)
+    utm_medium = Column(String(100), nullable=True)
+    referrer = Column(String(2000), nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow, server_default=func.now(), nullable=False)
