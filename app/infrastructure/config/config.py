@@ -27,6 +27,7 @@ class Settings(BaseSettings):
         return (
             f"mysql+aiomysql://{self.MYSQL_USER}:{password}"
             f"@{self.MYSQL_HOST}:{self.MYSQL_PORT}/{self.MYSQL_SCHEMA}"
+            f"?charset=utf8mb4"
         )
 
 
