@@ -28,6 +28,7 @@ class FrontendSubCourseResponseForm(BaseModel):
 
 class FrontendCourseDetailResponseForm(BaseModel):
     courseId: str
+    courseType: str
     title: str
     description: str
     totalDuration: int
@@ -42,6 +43,7 @@ class FrontendCourseDetailResponseForm(BaseModel):
         route_summary = " > ".join(p.name for p in dto.places)
         return cls(
             courseId=dto.course_id,
+            courseType=dto.grade,
             title=dto.title,
             description=dto.description,
             totalDuration=dto.estimated_duration_minutes,
