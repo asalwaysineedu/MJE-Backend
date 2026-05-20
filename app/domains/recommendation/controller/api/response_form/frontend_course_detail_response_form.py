@@ -152,6 +152,7 @@ class FrontendOtherCourseItemForm(BaseModel):
     courseId: str
     courseType: str
     name: str
+    places: List[str]
     locations: List[str]
     duration: Optional[int] = None
     description: str
@@ -168,6 +169,7 @@ class FrontendOtherCoursesListForm(BaseModel):
                     courseId=o.course_id,
                     courseType=o.grade,
                     name=o.title,
+                    places=o.places,
                     locations=[o.area],
                     duration=o.estimated_duration_minutes,
                     description=o.route_summary,

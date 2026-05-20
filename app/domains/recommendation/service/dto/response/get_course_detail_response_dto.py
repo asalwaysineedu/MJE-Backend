@@ -31,6 +31,7 @@ class OtherCourseDto:
     route_summary: str
     area: str
     estimated_duration_minutes: int
+    places: List[str] = field(default_factory=list)
 
 
 @dataclass

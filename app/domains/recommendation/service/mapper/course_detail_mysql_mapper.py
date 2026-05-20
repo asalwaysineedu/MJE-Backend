@@ -50,6 +50,7 @@ def build_course_detail_from_entity(
             route_summary=" > ".join(p.name for p in sorted(o.places, key=lambda x: x.order)),
             area=o.area,
             estimated_duration_minutes=o.estimated_duration_minutes,
+            places=[p.name for p in sorted(o.places, key=lambda x: x.order)],
         )
         for o in other_entities
         if o.course_id != course_id
