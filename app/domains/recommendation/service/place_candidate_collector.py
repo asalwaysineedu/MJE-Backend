@@ -90,6 +90,8 @@ _NAME_BLACKLIST = frozenset([
     "히어로보드게임카페", "스텔라떡볶이", "메가MGC커피",
     "KT퓨처온", "CEC 영어북놀이터", "리치보드게임카페",
     "서울시설공단",
+    "A보드게임카페",
+    "롯데리아",
 ])
 
 _ACTIVITY_CAFE_EXCLUDE = frozenset(["카페", "커피"])
