@@ -163,18 +163,25 @@ class FrontendOtherCoursesListForm(BaseModel):
 
     @classmethod
     def from_dto(cls, dto: GetCourseDetailResponseDto) -> "FrontendOtherCoursesListForm":
-        return cls(
-            courses=[
+        optional_index = 0
+        courses = []
+        for o in dto.other_courses:
+            if o.course_id == dto.course_id:
+                continue
+            if o.grade == "best":
+                course_type = "best"
+            else:
+                course_type = "optional_a" if optional_index == 0 else "optional_b"
+                optional_index += 1
+            courses.append(
                 FrontendOtherCourseItemForm(
                     courseId=o.course_id,
-                    courseType=o.grade,
+                    courseType=course_type,
                     name=o.title,
                     places=o.places,
                     locations=[o.area],
                     duration=o.estimated_duration_minutes,
                     description=o.route_summary,
                 )
-                for o in dto.other_courses
-                if o.course_id != dto.course_id
-            ]
-        )
+            )
+        return cls(courses=courses)
