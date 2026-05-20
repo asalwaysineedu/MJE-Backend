@@ -15,6 +15,9 @@ class FrontendPlaceResponseForm(BaseModel):
     photoUrl: Optional[str] = None
     description: Optional[str] = None
     routeDurationMin: Optional[int] = None
+    address: Optional[str] = None
+    startTime: Optional[str] = None
+    endTime: Optional[str] = None
 
 
 class FrontendSubCourseResponseForm(BaseModel):
@@ -59,6 +62,9 @@ class FrontendCourseDetailResponseForm(BaseModel):
                     photoUrl=p.image_url,
                     description=p.short_description,
                     routeDurationMin=p.move_time_to_next_minutes,
+                    address=p.road_address or p.address,
+                    startTime=p.start_time,
+                    endTime=p.end_time,
                 )
                 for p in dto.places
             ],
