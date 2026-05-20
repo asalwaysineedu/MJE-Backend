@@ -15,6 +15,9 @@ class FrontendPlaceResponseForm(BaseModel):
     photoUrl: Optional[str] = None
     description: Optional[str] = None
     routeDurationMin: Optional[int] = None
+    address: Optional[str] = None
+    startTime: Optional[str] = None
+    endTime: Optional[str] = None
 
 
 class FrontendSubCourseResponseForm(BaseModel):
@@ -59,6 +62,9 @@ class FrontendCourseDetailResponseForm(BaseModel):
                     photoUrl=p.image_url,
                     description=p.short_description,
                     routeDurationMin=p.move_time_to_next_minutes,
+                    address=p.road_address or p.address,
+                    startTime=p.start_time,
+                    endTime=p.end_time,
                 )
                 for p in dto.places
             ],
@@ -163,18 +169,25 @@ class FrontendOtherCoursesListForm(BaseModel):
 
     @classmethod
     def from_dto(cls, dto: GetCourseDetailResponseDto) -> "FrontendOtherCoursesListForm":
-        return cls(
-            courses=[
+        optional_index = 0
+        courses = []
+        for o in dto.other_courses:
+            if o.course_id == dto.course_id:
+                continue
+            if o.grade == "best":
+                course_type = "best"
+            else:
+                course_type = "optional_a" if optional_index == 0 else "optional_b"
+                optional_index += 1
+            courses.append(
                 FrontendOtherCourseItemForm(
                     courseId=o.course_id,
-                    courseType=o.grade,
+                    courseType=course_type,
                     name=o.title,
                     places=o.places,
                     locations=[o.area],
                     duration=o.estimated_duration_minutes,
                     description=o.route_summary,
                 )
-                for o in dto.other_courses
-                if o.course_id != dto.course_id
-            ]
-        )
+            )
+        return cls(courses=courses)
