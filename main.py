@@ -12,6 +12,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.common.exception_handler import register_exception_handlers
 from app.domains.courses.controller.api.courses_router import router as courses_router
+from app.domains.dwell_time.controller.api.dwell_time_router import router as dwell_time_router
 from app.domains.home.controller.api.home_router import router as home_router
 from app.domains.landing.controller.api.landing_router import router as landing_router
 from app.domains.recommendation.controller.api.recommendation_router import router as recommendation_router
@@ -46,11 +47,11 @@ app.add_middleware(
 register_exception_handlers(app)
 
 app.include_router(home_router)
-app.include_router(landing_router)
 app.include_router(recommendation_router)
 app.include_router(recommendations_detail_router)
 app.include_router(courses_router)
 app.include_router(export_log_router)
+app.include_router(dwell_time_router)
 
 
 @app.get("/health")
